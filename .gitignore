@@ -1,0 +1,42 @@
+# Data files (too large for GitHub)
+data/all_games.csv
+data/nba-pbp.zip
+data/*.parquet
+data/*_processed/
+
+# Checkpoints
+checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/*.ipynb
+
+# Logs
+*.log
