@@ -65,6 +65,8 @@ Note that `pts_per100` and `reb_per100` were only included in the 'rich' models.
 
 2. **Stats as Features** → R² ≈ 0.20
    - Player quality encoded directly in stats
+   - Tested at both team-level (pre-aggregated) and player-level (with attention)
+   - Attention at player-level actually *hurts* (R² = 0.18) - overfits without player identity
 
 3. **Hybrid: Stats + Learned Residuals** → R² ≈ 0.21
    - Small learned embeddings capture what stats miss
@@ -105,11 +107,13 @@ Player Stats → Linear Projection → Add Residual Embedding
 
 | Model | Parameters | Test R² | Test RMSE | Win Accuracy |
 |-------|------------|---------|-----------|--------------|
-| StatsBaseline | 42K | 0.204 | 12.78 | 65.5% |
-| HybridBaseline | 46K | 0.211 | 12.69 | 66.6% |
-| HybridAttention | 55K | 0.200 | 12.80 | 65.4% |
-| HybridBaseline (rich) | 46K | 0.215 | 12.56 | 66.6% |
-| HybridAttention (rich) | 55K | 0.196 | 12.71 | 65.7% |
+| StatsBaseline (team-level) | 5K | 0.204 | 12.65 | 66.6% |
+| StatsPlayerBaseline | 9K | 0.200 | 12.68 | 66.3% |
+| StatsPlayerAttention | 17K | 0.177 | 12.86 | 65.2% |
+| HybridBaseline | 46K | 0.200 | 12.68 | 65.9% |
+| HybridAttention | 55K | 0.195 | 12.72 | 66.0% |
+| HybridBaseline (rich) | 46K | 0.212 | 12.59 | 66.4% |
+| HybridAttention (rich) | 55K | 0.212 | 12.59 | 66.3% |
 
 ### XGBoost Comparison
 
@@ -192,6 +196,14 @@ nba-lineup-transformer/
 │   │── # Original approach (embeddings only) - FAILED, R² ≈ 0
 │   ├── models.py                        # Learned embeddings + attention
 │   ├── train.py                         # Training script for original approach
+│   │
+│   │── # Stats at team level (pre-aggregated) - R² ≈ 0.20
+│   ├── models_stats.py                  # StatsBaseline, StatsAttention
+│   ├── train_stats.py                   # Training script
+│   │
+│   │── # Stats at player level (no learned embeddings) - R² ≈ 0.20
+│   ├── models_stats_player.py           # StatsPlayerBaseline, StatsPlayerAttention
+│   ├── train_stats_player.py            # Training script
 │   │
 │   │── # Final approach (stats + embeddings) - R² ≈ 0.21
 │   ├── models_hybrid.py                 # HybridBaseline, HybridAttention
