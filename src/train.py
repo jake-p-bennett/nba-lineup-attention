@@ -3,7 +3,7 @@ Training script for NBA lineup models.
 
 Usage:
     python src/train.py --model baseline
-    python src/train.py --model transformer
+    python src/train.py --model attention
 """
 
 import argparse
@@ -50,7 +50,7 @@ def create_model(model_type: str, num_players: int) -> nn.Module:
     """Create model by type."""
     if model_type == "baseline":
         return BaselineModel(num_players, embedding_dim=64, hidden_dim=128)
-    elif model_type == "transformer":
+    elif model_type == "attention":
         return LineupTransformer(
             num_players,
             embedding_dim=64,
@@ -145,11 +145,17 @@ def evaluate(
     ss_tot = ((all_targets - all_targets.mean()) ** 2).sum()
     r2 = 1 - (ss_res / ss_tot)
 
+    # Win prediction accuracy
+    pred_home_win = all_preds > 0
+    actual_home_win = all_targets > 0
+    win_accuracy = (pred_home_win == actual_home_win).float().mean().item()
+
     return {
         "mse": mse,
         "rmse": rmse,
         "mae": mae,
         "r2": r2.item(),
+        "win_accuracy": win_accuracy,
     }
 
 
@@ -211,8 +217,8 @@ def train(
             f"Epoch {epoch+1:3d} | "
             f"Train Loss: {train_loss:.4f} | "
             f"Val RMSE: {val_metrics['rmse']:.2f} | "
-            f"Val MAE: {val_metrics['mae']:.2f} | "
-            f"Val R²: {val_metrics['r2']:.4f}"
+            f"Val R²: {val_metrics['r2']:.4f} | "
+            f"Win Acc: {val_metrics['win_accuracy']:.1%}"
         )
 
         # Learning rate scheduling
@@ -246,9 +252,10 @@ def train(
     print(f"\n{'='*50}")
     print(f"TEST RESULTS ({model_type})")
     print(f"{'='*50}")
-    print(f"RMSE: {test_metrics['rmse']:.2f}")
-    print(f"MAE:  {test_metrics['mae']:.2f}")
-    print(f"R²:   {test_metrics['r2']:.4f}")
+    print(f"RMSE:         {test_metrics['rmse']:.2f}")
+    print(f"MAE:          {test_metrics['mae']:.2f}")
+    print(f"R²:           {test_metrics['r2']:.4f}")
+    print(f"Win Accuracy: {test_metrics['win_accuracy']:.1%}")
 
     # Save final results
     results = {
@@ -267,7 +274,7 @@ def train(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, default="baseline", choices=["baseline", "transformer"])
+    parser.add_argument("--model", type=str, default="baseline", choices=["baseline", "attention"])
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)

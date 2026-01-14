@@ -9,10 +9,10 @@
 | Model | Features/Params | Test R² | Win Accuracy |
 |-------|-----------------|---------|--------------|
 | **XGBoost (concat)** | 160 features | **0.289** | 65.2% |
-| Neural Net (Baseline) | 46K params | 0.215 | 66.6% |
-| Neural Net (Attention) | 55K params | 0.200 | 65.4% |
+| Neural Net (Baseline) | 46K params | 0.203 | 66.2% |
+| Neural Net (Attention) | 55K params | 0.200 | 66.7% |
 
-This suggests that **non-linear individual player effects exist** (superstars matter disproportionately), but **pairwise synergy was not detectable** when using the attention mechanism with this data and feature set.
+This suggests that non-linear individual player effects exist, but pairwise synergy was not detectable when using the attention mechanism with this data and feature set.
 
 ---
 
@@ -66,14 +66,14 @@ Note that `pts_per100` and `reb_per100` were only included in the 'rich' models.
 2. **Stats as Features** → R² ≈ 0.20
    - Player quality encoded directly in stats
    - Tested at both team-level (pre-aggregated) and player-level (with attention)
-   - Attention at player-level actually *hurts* (R² = 0.18) - overfits without player identity
+   - Attention doesn't help at either level
 
-3. **Hybrid: Stats + Learned Residuals** → R² ≈ 0.21
+3. **Hybrid: Stats + Learned Residuals** → R² ≈ 0.20
    - Small learned embeddings capture what stats miss
 
-4. **Richer Stats (7 features)** → R² ≈ 0.215
+4. **Richer Stats (7 features)** → R² ≈ 0.20
    - Included `pts_per100` and `reb_per100` to see if individual stats make a difference
-   - Marginal improvement from diverse features
+   - No meaningful improvement from additional features
 
 ### Model Architectures
 
@@ -107,13 +107,16 @@ Player Stats → Linear Projection → Add Residual Embedding
 
 | Model | Parameters | Test R² | Test RMSE | Win Accuracy |
 |-------|------------|---------|-----------|--------------|
-| StatsBaseline (team-level) | 5K | 0.204 | 12.65 | 66.6% |
-| StatsPlayerBaseline | 9K | 0.200 | 12.68 | 66.3% |
-| StatsPlayerAttention | 17K | 0.177 | 12.86 | 65.2% |
-| HybridBaseline | 46K | 0.200 | 12.68 | 65.9% |
-| HybridAttention | 55K | 0.195 | 12.72 | 66.0% |
-| HybridBaseline (rich) | 46K | 0.212 | 12.59 | 66.4% |
-| HybridAttention (rich) | 55K | 0.212 | 12.59 | 66.3% |
+| EmbeddingsBaseline | 83K | 0.001 | 26.7 | 54.9% |
+| EmbeddingsAttention | 176K | 0.000 | 26.7 | 56.0% |
+| StatsBaseline (team-level) | 5K | 0.202 | 12.7 | 66.5% |
+| StatsAttention (team-level) | 42K | 0.193 | 12.7 | 66.2% |
+| StatsPlayerBaseline | 9K | 0.201 | 12.7 | 65.0% |
+| StatsPlayerAttention | 17K | 0.191 | 12.8 | 66.1% |
+| HybridBaseline | 46K | 0.203 | 12.7 | 65.8% |
+| HybridAttention | 55K | 0.199 | 12.7 | 65.6% |
+| HybridBaseline (rich) | 46K | 0.203 | 12.7 | 66.2% |
+| HybridAttention (rich) | 55K | 0.200 | 12.7 | 66.7% |
 
 ### XGBoost Comparison
 
@@ -141,11 +144,11 @@ The concat approach lets XGBoost learn non-linear rules like "if the best player
 | XGBoost (concat) | Non-linear effects of player quality (superstars, roster depth) |
 | Attention | Pairwise synergy between specific players |
 
-**Key insight:** The improvement from XGBoost concat shows that **non-linear individual effects exist** (superstars matter disproportionately). However, attention didn't help, suggesting that **pairwise synergy is either weak, requires different features to detect, or is washed out by game-level aggregation**.
+The improvement from XGBoost concat shows that non-linear individual effects exist. However, attention didn't help, suggesting that pairwise synergy is either weak, requires different features to detect, or is washed out by game-level aggregation.
 
 ### Limitations
 
-The null result on synergy should be interpreted carefully. It's hard to conclude that lineup chemistry doesn't exist. But this approach didn't detect it. Possible explanations:
+It's hard to conclude that lineup chemistry doesn't exist. But this approach didn't detect it. Possible explanations:
 
 - **Feature limitations**: Efficiency stats may not capture the right signal (e.g., play-type compatibility)
 - **Aggregation level**: Game-level averaging may obscure lineup-specific effects
@@ -205,7 +208,7 @@ nba-lineup-transformer/
 │   ├── models_stats_player.py           # StatsPlayerBaseline, StatsPlayerAttention
 │   ├── train_stats_player.py            # Training script
 │   │
-│   │── # Final approach (stats + embeddings) - R² ≈ 0.21
+│   │── # Final approach (stats + embeddings) - R² ≈ 0.20
 │   ├── models_hybrid.py                 # HybridBaseline, HybridAttention
 │   ├── train_hybrid.py                  # Game-level training
 │   ├── train_hybrid_rich.py             # Game-level training (7 features)
